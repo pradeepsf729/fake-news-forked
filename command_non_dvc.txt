@@ -1,0 +1,14 @@
+# commands to use when not using dvc.
+
+# data generationa nd clean up
+python scripts/compute_credit_bins.py --train-data-path data/processed/cleaned_train_data.json --output-path data/processed/optimal_credit_bins.json
+python scripts/normalize_and_clean_data.py --train-data-path data/raw/train2.tsv --val-data-path data/raw/val2.tsv --test-data-path data/raw/test2.tsv --output-dir data/processed
+
+# training
+python fake_news/train.py --config-file config/random_forest.json
+
+# running the model 
+export MODEL_DIR="/root/fake-news/model_checkpoints/random_forest"
+export MODULE_NAME="fake_news.server.main"
+python fake_news/server/main_cli.py <any_text_inquotes>
+

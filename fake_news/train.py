@@ -1,3 +1,5 @@
+import sys
+sys.path.append('/root/fake-news') # replace with project root dir.
 import argparse
 import json
 import logging

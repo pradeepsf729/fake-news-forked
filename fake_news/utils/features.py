@@ -29,22 +29,22 @@ LOGGER = logging.getLogger(__name__)
 
 
 class Datapoint(BaseModel):
-    id: Optional[str]
-    statement_json: Optional[str]
-    label: Optional[bool]
+    id: Optional[str] = None
+    statement_json: Optional[str] = None
+    label: Optional[bool] = None
     statement: str
-    subject: Optional[str]
-    speaker: Optional[str]
-    speaker_title: Optional[str]
-    state_info: Optional[str]
-    party_affiliation: Optional[str]
+    subject: Optional[str] = None
+    speaker: Optional[str] = None
+    speaker_title: Optional[str] = None
+    state_info: Optional[str] = None
+    party_affiliation: Optional[str] = None
     barely_true_count: float
     false_count: float
     half_true_count: float
     mostly_true_count: float
     pants_fire_count: float
-    context: Optional[str]
-    justification: Optional[str]
+    context: Optional[str] = None
+    justification: Optional[str] = None
 
 
 def extract_manual_features(datapoints: List[Datapoint], optimal_credit_bins: Dict) -> List[Dict]:
@@ -118,7 +118,7 @@ class TreeFeaturizer(object):
         all_feature_names = []
         for name, pipeline in self.combined_featurizer.transformer_list:
             final_pipe_name, final_pipe_transformer = pipeline.steps[-1]
-            all_feature_names.extend(final_pipe_transformer.get_feature_names())
+            all_feature_names.extend(final_pipe_transformer.get_feature_names_out())
         return all_feature_names
     
     def fit(self, datapoints: List[Datapoint]) -> None:
@@ -145,8 +145,9 @@ def normalize_labels(datapoints: List[Dict]) -> List[Dict]:
     for datapoint in datapoints:
         # First do simple cleaning
         normalized_datapoint = deepcopy(datapoint)
-        normalized_datapoint["label"] = SIX_WAY_LABEL_TO_BINARY[datapoint["label".lower().strip()]]
-        normalized_datapoints.append(normalized_datapoint)
+        if datapoint["label".lower().strip()]:
+            normalized_datapoint["label"] = SIX_WAY_LABEL_TO_BINARY[datapoint["label".lower().strip()]]
+            normalized_datapoints.append(normalized_datapoint)
     return normalized_datapoints
 
 
@@ -180,11 +181,12 @@ def normalize_and_clean_state_info(datapoints: List[Dict]) -> List[Dict]:
     for datapoint in datapoints:
         normalized_datapoint = deepcopy(datapoint)
         old_state_info = normalized_datapoint["state_info"]
-        old_state_info = old_state_info.lower().strip().replace("-", " ")
-        if old_state_info in CANONICAL_STATE:
-            old_state_info = CANONICAL_STATE[old_state_info]
-        normalized_datapoint["state_info"] = old_state_info
-        normalized_datapoints.append(normalized_datapoint)
+        if old_state_info:
+            old_state_info = old_state_info.lower().strip().replace("-", " ")
+            if old_state_info in CANONICAL_STATE:
+                old_state_info = CANONICAL_STATE[old_state_info]
+            normalized_datapoint["state_info"] = old_state_info
+            normalized_datapoints.append(normalized_datapoint)
     return normalized_datapoints
 
 
@@ -197,7 +199,7 @@ def normalize_and_clean_counts(datapoints: List[Dict]) -> List[Dict]:
                           "half_true_count",
                           "mostly_true_count",
                           "pants_fire_count"]:
-            if count_col in normalized_datapoint:
+            if count_col in normalized_datapoint and normalized_datapoint[count_col] != None:
                 normalized_datapoint[count_col] = float(normalized_datapoint[count_col])
         normalized_datapoints.append(normalized_datapoint)
     return normalized_datapoints
